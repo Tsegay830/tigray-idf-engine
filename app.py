@@ -88,7 +88,8 @@ DATA = {
     'Adigrat': {'a': 1280.0, 'b': 12.5, 'c': 0.79, 'm': 0.19},
     'Axum':    {'a': 1350.2, 'b': 13.8, 'c': 0.80, 'm': 0.185},
     'Shire':   {'a': 1490.8, 'b': 15.1, 'c': 0.82, 'm': 0.175},
-    'Alamata': {'a': 1510.4, 'b': 16.0, 'c': 0.83, 'm': 0.170}
+    'Alamata': {'a': 1510.4, 'b': 16.0, 'c': 0.83, 'm': 0.170},
+    'Humera':  {'a': 1560.0, 'b': 16.5, 'c': 0.84, 'm': 0.172}
 }
 
 DURATIONS_MIN = [5, 10, 15, 30, 60, 120, 180, 360, 720, 1440]
@@ -121,7 +122,7 @@ col_left, col_right = st.columns([1, 1], gap="medium")
 with col_left:
     with st.container(border=True):
         st.markdown("### ⚙️ **Design Criteria Controls**")
-        city = st.selectbox("Select City / Urban Hub:", list(DATA.keys()), index=3)
+        city = st.selectbox("Select City / Urban Hub:", list(DATA.keys()), index=5) # Default to Humera
         T = st.selectbox("Return Period (T in Years):", RETURN_PERIODS, index=3)
         
         duration_options = {format_duration(d): d for d in DURATIONS_MIN}
@@ -169,7 +170,6 @@ st.write("")
 with st.container(border=True):
     st.markdown("### 📈 **Automatic IDF Plotting Window**")
     
-    # Styled like standalone Matplotlib Figure (Figure 1 window style)
     fig, ax = plt.subplots(figsize=(11, 5))
     durations = np.array(DURATIONS_MIN)
 
