@@ -10,10 +10,9 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- CUSTOM CSS (Mirrors the Desktop App Layout) ---
+# --- CUSTOM CSS ---
 st.markdown("""
 <style>
-    /* Global background padding */
     .block-container {
         padding-top: 1.5rem;
         padding-bottom: 2rem;
@@ -31,12 +30,12 @@ st.markdown("""
         color: #ffffff;
         font-size: 26px;
         font-weight: 800;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
         letter-spacing: 0.5px;
     }
     .header-subtitle {
         color: #00adb5;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 600;
     }
 
@@ -74,9 +73,6 @@ st.markdown("""
         background-color: #0b192c;
         border-radius: 6px;
         padding: 12px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
         margin-top: 30px;
     }
     .footer-text {
@@ -115,7 +111,7 @@ def calculate_intensity(city, T, t_min):
 st.markdown("""
 <div class="header-box">
     <div class="header-title">TIGRAY REGIONAL DESIGN STORM ENGINE v1.0</div>
-    <div class="header-subtitle">Developed & Authored by: Tsegay Ayele Kidane | Water Resources Specialist</div>
+    <div class="header-subtitle">Developed by: Tsegay Ayele Kidane | Hydraulic Engineer | Water Resources Specialist | Water Systems Researcher</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -124,25 +120,25 @@ col_left, col_right = st.columns([1, 1], gap="medium")
 
 with col_left:
     with st.container(border=True):
-        st.markdown("### **Design Criteria Controls**")
-        city = st.selectbox("**Select City / Urban Hub:**", list(DATA.keys()), index=3) # Shire default
-        T = st.selectbox("**Return Period (T in Years):**", RETURN_PERIODS, index=3)   # T=25 default
+        st.markdown("### ⚙️ **Design Criteria Controls**")
+        city = st.selectbox("Select City / Urban Hub:", list(DATA.keys()), index=3)
+        T = st.selectbox("Return Period (T in Years):", RETURN_PERIODS, index=3)
         
         duration_options = {format_duration(d): d for d in DURATIONS_MIN}
-        selected_label = st.selectbox("**Storm Duration (t):**", list(duration_options.keys()), index=3) # 30 min default
+        selected_label = st.selectbox("Storm Duration (t):", list(duration_options.keys()), index=3)
         t_min = duration_options[selected_label]
 
-        # Calculate values dynamically
         intensity = calculate_intensity(city, T, t_min)
         depth = intensity * (t_min / 60.0)
 
+        st.button("⚡ COMPUTE DESIGN STORM", use_container_width=True, type="primary")
+
 with col_right:
     with st.container(border=True):
-        st.markdown("### **Hydrologic Output & Export**")
+        st.markdown("### 📊 **Hydrologic Output Export**")
         st.markdown(f"**Selected Location:** `{city}`")
         st.markdown(f"**Design Event:** `T = {T}-Year | t = {selected_label}`")
 
-        # Result Display Card (matching GUI layout)
         st.markdown(f"""
         <div class="result-card">
             <div class="result-header">DESIGN RAINFALL INTENSITY</div>
@@ -151,7 +147,7 @@ with col_right:
         </div>
         """, unsafe_allow_html=True)
 
-        # Summary Matrix Generation & Download
+        # Summary Matrix Setup
         matrix = []
         for t in DURATIONS_MIN:
             row = {'Duration': format_duration(t)}
@@ -165,38 +161,40 @@ with col_right:
             data=df.to_csv(index=False).encode('utf-8'),
             file_name=f"{city}_IDF_Summary_Matrix.csv",
             mime="text/csv",
-            use_container_width=True,
-            type="primary"
+            use_container_width=True
         )
 
-# --- 3. INTERACTIVE IDF CURVES SECTION ---
+# --- 3. AUTOMATIC INTERACTIVE IDF PLOTTING WINDOW ---
 st.write("")
 with st.container(border=True):
-    st.markdown(f"### 📊 **{city} Catchment - Intensity-Duration-Frequency (IDF) Curves**")
+    st.markdown("### 📈 **Automatic IDF Plotting Window**")
     
-    fig, ax = plt.subplots(figsize=(10, 4.2))
+    # Styled like standalone Matplotlib Figure (Figure 1 window style)
+    fig, ax = plt.subplots(figsize=(11, 5))
     durations = np.array(DURATIONS_MIN)
 
     for rep_T in RETURN_PERIODS:
         intensities = [calculate_intensity(city, rep_T, t) for t in durations]
-        ax.plot(durations, intensities, marker='o', linewidth=2, label=f'T={rep_T}yr')
+        ax.plot(durations, intensities, marker='o', markersize=4, linewidth=1.5, label=f'T={rep_T}yr')
 
     ax.set_xscale('log')
     ax.set_yscale('log')
+    ax.set_title(f"{city} Catchment - Intensity-Duration-Frequency (IDF) Curves\nAuthored by: Tsegay Ayele Kidane", fontsize=11, fontweight='bold', pad=12)
     ax.set_xlabel('Duration (Minutes)', fontsize=10, fontweight='bold')
     ax.set_ylabel('Rainfall Intensity (mm/hr)', fontsize=10, fontweight='bold')
     ax.grid(True, which="both", ls="--", alpha=0.5)
-    ax.legend(title="Return Period", frameon=True)
+    ax.legend(title="Return Period", frameon=True, loc="upper right")
     plt.tight_layout()
     
     st.pyplot(fig)
 
-# --- 4. FOOTER VAULT BANNER ---
+# --- 4. FOOTER BANNER & CONTACT ---
 st.markdown("""
 <div class="footer-box">
     <span class="footer-text">🔒 <b>Raw Daily Data:</b> Restricted Backend Vault | © Tsegay Ayele Kidane</span>
 </div>
 """, unsafe_allow_html=True)
 
+st.write("")
 if st.button("Request 26-Yr Daily Series Access"):
-    st.info("Please submit your research/project clearance request directly to Tsegay Ayele Kidane.")
+    st.info("please submit your request to Tsegay Ayele Kidane via Phone:+251929112551 or via email: amen.atsegay@gmail.com")
