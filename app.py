@@ -3,13 +3,90 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+# Page Config
 st.set_page_config(
-    page_title="Tigray Regional IDF Engine",
+    page_title="Tigray Regional IDF Engine v1.0",
     page_icon="🌧️",
     layout="wide"
 )
 
-# Engine Parameters
+# --- CUSTOM CSS (Mirrors the Desktop App Layout) ---
+st.markdown("""
+<style>
+    /* Global background padding */
+    .block-container {
+        padding-top: 1.5rem;
+        padding-bottom: 2rem;
+    }
+    
+    /* Header Dark Banner */
+    .header-box {
+        background-color: #0b192c;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 25px;
+    }
+    .header-title {
+        color: #ffffff;
+        font-size: 26px;
+        font-weight: 800;
+        margin-bottom: 4px;
+        letter-spacing: 0.5px;
+    }
+    .header-subtitle {
+        color: #00adb5;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    /* Result Metric Card */
+    .result-card {
+        background-color: #f8f9fa;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 18px;
+        text-align: center;
+        margin-top: 10px;
+        margin-bottom: 15px;
+    }
+    .result-header {
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .result-value {
+        color: #0056b3;
+        font-size: 34px;
+        font-weight: 800;
+        margin: 8px 0;
+    }
+    .result-depth {
+        color: #334155;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    /* Footer Banner */
+    .footer-box {
+        background-color: #0b192c;
+        border-radius: 6px;
+        padding: 12px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 30px;
+    }
+    .footer-text {
+        color: #cbd5e1;
+        font-size: 12px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# --- HYDROLOGIC ENGINE DATA ---
 DATA = {
     'Mekelle': {'a': 1420.5, 'b': 14.2, 'c': 0.81, 'm': 0.18},
     'Adigrat': {'a': 1280.0, 'b': 12.5, 'c': 0.79, 'm': 0.19},
@@ -34,70 +111,92 @@ def calculate_intensity(city, T, t_min):
     p = DATA[city]
     return (p['a'] * (T ** p['m'])) / ((t_min + p['b']) ** p['c'])
 
-# Header
-st.title("🌧️ TIGRAY REGIONAL DESIGN STORM ENGINE v1.0")
-st.caption("Developed & Authored by: **Tsegay Ayele Kidane** | Water Resources Specialist")
+# --- 1. HEADER BANNER ---
+st.markdown("""
+<div class="header-box">
+    <div class="header-title">TIGRAY REGIONAL DESIGN STORM ENGINE v1.0</div>
+    <div class="header-subtitle">Developed & Authored by: Tsegay Ayele Kidane | Water Resources Specialist</div>
+</div>
+""", unsafe_allow_html=True)
 
-st.divider()
+# --- 2. MAIN TWO-COLUMN LAYOUT ---
+col_left, col_right = st.columns([1, 1], gap="medium")
 
-col1, col2 = st.columns([1, 1.2])
+with col_left:
+    with st.container(border=True):
+        st.markdown("### **Design Criteria Controls**")
+        city = st.selectbox("**Select City / Urban Hub:**", list(DATA.keys()), index=3) # Shire default
+        T = st.selectbox("**Return Period (T in Years):**", RETURN_PERIODS, index=3)   # T=25 default
+        
+        duration_options = {format_duration(d): d for d in DURATIONS_MIN}
+        selected_label = st.selectbox("**Storm Duration (t):**", list(duration_options.keys()), index=3) # 30 min default
+        t_min = duration_options[selected_label]
 
-with col1:
-    st.subheader("⚙️ Design Criteria Controls")
-    city = st.selectbox("Select City / Urban Hub", list(DATA.keys()))
-    T = st.selectbox("Return Period (T in Years)", RETURN_PERIODS, index=1)
+        # Calculate values dynamically
+        intensity = calculate_intensity(city, T, t_min)
+        depth = intensity * (t_min / 60.0)
+
+with col_right:
+    with st.container(border=True):
+        st.markdown("### **Hydrologic Output & Export**")
+        st.markdown(f"**Selected Location:** `{city}`")
+        st.markdown(f"**Design Event:** `T = {T}-Year | t = {selected_label}`")
+
+        # Result Display Card (matching GUI layout)
+        st.markdown(f"""
+        <div class="result-card">
+            <div class="result-header">DESIGN RAINFALL INTENSITY</div>
+            <div class="result-value">{intensity:.2f} mm/hr</div>
+            <div class="result-depth">Effective Depth: <b>{depth:.2f} mm</b></div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Summary Matrix Generation & Download
+        matrix = []
+        for t in DURATIONS_MIN:
+            row = {'Duration': format_duration(t)}
+            for rep_T in RETURN_PERIODS:
+                row[f'T={rep_T}yr (mm/hr)'] = round(calculate_intensity(city, rep_T, t), 2)
+            matrix.append(row)
+        df = pd.DataFrame(matrix)
+
+        st.download_button(
+            label="💾 Export IDF Summary Matrix (CSV)",
+            data=df.to_csv(index=False).encode('utf-8'),
+            file_name=f"{city}_IDF_Summary_Matrix.csv",
+            mime="text/csv",
+            use_container_width=True,
+            type="primary"
+        )
+
+# --- 3. INTERACTIVE IDF CURVES SECTION ---
+st.write("")
+with st.container(border=True):
+    st.markdown(f"### 📊 **{city} Catchment - Intensity-Duration-Frequency (IDF) Curves**")
     
-    duration_options = {format_duration(d): d for d in DURATIONS_MIN}
-    selected_label = st.selectbox("Storm Duration (t)", list(duration_options.keys()))
-    t_min = duration_options[selected_label]
+    fig, ax = plt.subplots(figsize=(10, 4.2))
+    durations = np.array(DURATIONS_MIN)
 
-    intensity = calculate_intensity(city, T, t_min)
-    depth = intensity * (t_min / 60.0)
+    for rep_T in RETURN_PERIODS:
+        intensities = [calculate_intensity(city, rep_T, t) for t in durations]
+        ax.plot(durations, intensities, marker='o', linewidth=2, label=f'T={rep_T}yr')
 
-with col2:
-    st.subheader("📊 Hydrologic Outputs")
-    st.metric(label="Design Rainfall Intensity", value=f"{intensity:.2f} mm/hr")
-    st.metric(label="Effective Storm Depth", value=f"{depth:.2f} mm")
-
-    st.subheader("💾 Summary Matrix Export")
-    matrix = []
-    for t in DURATIONS_MIN:
-        row = {'Duration': format_duration(t)}
-        for rep_T in RETURN_PERIODS:
-            row[f'T={rep_T}yr (mm/hr)'] = round(calculate_intensity(city, rep_T, t), 2)
-        matrix.append(row)
-    df = pd.DataFrame(matrix)
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel('Duration (Minutes)', fontsize=10, fontweight='bold')
+    ax.set_ylabel('Rainfall Intensity (mm/hr)', fontsize=10, fontweight='bold')
+    ax.grid(True, which="both", ls="--", alpha=0.5)
+    ax.legend(title="Return Period", frameon=True)
+    plt.tight_layout()
     
-    st.dataframe(df, use_container_width=True)
-    st.download_button(
-        label="Download IDF Matrix (CSV)",
-        data=df.to_csv(index=False).encode('utf-8'),
-        file_name=f"{city}_IDF_Summary_Matrix.csv",
-        mime="text/csv"
-    )
+    st.pyplot(fig)
 
-st.divider()
+# --- 4. FOOTER VAULT BANNER ---
+st.markdown("""
+<div class="footer-box">
+    <span class="footer-text">🔒 <b>Raw Daily Data:</b> Restricted Backend Vault | © Tsegay Ayele Kidane</span>
+</div>
+""", unsafe_allow_html=True)
 
-# Interactive Plot
-st.subheader("📈 Interactive IDF Curves")
-fig, ax = plt.subplots(figsize=(10, 4.5))
-durations = np.array(DURATIONS_MIN)
-
-for rep_T in RETURN_PERIODS:
-    intensities = [calculate_intensity(city, rep_T, t) for t in durations]
-    ax.plot(durations, intensities, marker='o', label=f'T={rep_T}yr')
-
-ax.set_xscale('log')
-ax.set_yscale('log')
-ax.set_xlabel('Duration (Minutes)', fontweight='bold')
-ax.set_ylabel('Rainfall Intensity (mm/hr)', fontweight='bold')
-ax.set_title(f'{city} Catchment - Intensity-Duration-Frequency (IDF) Curves', fontweight='bold')
-ax.grid(True, which="both", ls="--", alpha=0.5)
-ax.legend(title="Return Period")
-st.pyplot(fig)
-
-# Footer Vault Section
-st.divider()
-st.info("🔒 **Raw Daily Data Vault:** Access to the 26-year daily rainfall series requires formal research/project clearance.")
-if st.button("Request 26-Yr Daily Series"):
-    st.success("To request access, please contact Tsegay Ayele Kidane with your institutional project proposal.")
+if st.button("Request 26-Yr Daily Series Access"):
+    st.info("Please submit your research/project clearance request directly to Tsegay Ayele Kidane.")
