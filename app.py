@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for UI styling
+# Custom CSS for UI styling (Updated to unsafe_allow_html=True)
 st.markdown("""
 <style>
     .main-header { font-size: 24px; font-weight: bold; color: #1E3A8A; margin-bottom: 5px; }
@@ -37,7 +37,7 @@ st.markdown("""
         font-size: 12px;
     }
 </style>
-""", unsafe_allow_text=True)
+""", unsafe_allow_html=True)
 
 # Helper function to convert decimal degrees to DMS
 def dec_to_dms(deg, is_lat=True):
@@ -77,9 +77,9 @@ st.sidebar.markdown(f"""
     <b>UTM Zone 37N:</b> E {utm_easting:,.1f} m, N {utm_northing:,.1f} m<br>
     <small><b>Decimal:</b> Lat: {lat_dec:.4f}°N | Lon: {lon_dec:.4f}°E</small>
 </div>
-""", unsafe_allow_text=True)
+""", unsafe_allow_html=True)
 
-st.sidebar.markdown('<div class="status-box">🔒 DATA STATUS: READ-ONLY ACCESS</div>', unsafe_allow_text=True)
+st.sidebar.markdown('<div class="status-box">🔒 DATA STATUS: READ-ONLY ACCESS</div>', unsafe_allow_html=True)
 
 # ==========================================
 # 3. SYNTHETIC IDF & FREQUENCY DATABASE
