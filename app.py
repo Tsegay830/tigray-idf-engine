@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import io
 
 # ==========================================
 # 1. PAGE CONFIGURATION & STYLING
@@ -14,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for UI styling (Updated to unsafe_allow_html=True)
+# Custom CSS for UI styling
 st.markdown("""
 <style>
     .main-header { font-size: 24px; font-weight: bold; color: #1E3A8A; margin-bottom: 5px; }
@@ -60,7 +59,7 @@ zone_option = st.sidebar.selectbox(
 
 woreda_option = st.sidebar.selectbox(
     "Select Woreda Hub / Town",
-    ["Shire (Inda Selassie)", "Axum", "Adwa", "Sheraro"],
+    ["Shire", "Axum", "Adwa", "Sheraro"],
     index=0
 )
 
@@ -90,7 +89,6 @@ return_periods = [2, 5, 10, 25, 50, 100]
 # Empirical IDF parameters for Shire region (Sherman Parameter Model: I = a / (t + b)^c)
 idf_data = {}
 for T in return_periods:
-    # Scale parameter based on return period
     a = 450 * (T ** 0.22)
     b = 12.0
     c = 0.78
@@ -116,7 +114,6 @@ tab1, tab2, tab3, tab4 = st.tabs([
     "4️⃣ Custom Design Storm Compute"
 ])
 
-# Color palette for return periods
 colors = {
     "T = 2 Years": "#1f77b4",
     "T = 5 Years": "#ff7f0e",
@@ -128,7 +125,7 @@ colors = {
 
 # --- DISPLAY 1: LINEAR IDF PLOT (0-120 min) ---
 with tab1:
-    st.subheader("1. Linear IDF Plot (High-Intensity Zone 0-120 min) - Shire (Inda Selassie)")
+    st.subheader("1. IDF Curve Plot (Linear plot for high-intensity zone 0-120 min)-Shire")
     
     fig1, ax1 = plt.subplots(figsize=(10, 5), dpi=150)
     short_mask = durations <= 120
@@ -148,9 +145,9 @@ with tab1:
     
     ax1.set_xlim(0, 120)
     ax1.set_xticks(np.arange(0, 121, 15))
-    ax1.set_xlabel("Storm Duration (minutes) [Linear Scale: 15-min Ticks]", fontsize=10)
-    ax1.set_ylabel("Rainfall Intensity (mm/hr) [2 mm/hr Ticks]", fontsize=10)
-    ax1.set_title("1. Linear IDF Plot (High Intensity Zone 0-120min)-Shire", fontsize=12, fontweight='bold')
+    ax1.set_xlabel("Storm Duration (minutes)", fontsize=10)
+    ax1.set_ylabel("Rainfall Intensity (mm/hr)", fontsize=10)
+    ax1.set_title("1. IDF Curve Plot (Linear plot for high-intensity zone 0-120 min)-Shire", fontsize=11, fontweight='bold')
     ax1.grid(True, which="both", linestyle=":", alpha=0.6)
     ax1.legend(title="Return Period", loc="upper right")
     
@@ -158,7 +155,7 @@ with tab1:
 
 # --- DISPLAY 2: SEMI-LOGARITHMIC IDF PLOT ---
 with tab2:
-    st.subheader("2. Semilogarithmic IDF Plot (Extended Duration Spectrum 5 min - 24 hrs) - Shire (Inda Selassie)")
+    st.subheader("2. IDF Curve Plot (Semilogarithmic plot for extended duration spectrum 5 min - 24 hrs)-Shire")
     
     fig2, ax2 = plt.subplots(figsize=(10, 5), dpi=150)
     
@@ -175,9 +172,9 @@ with tab2:
         )
     
     ax2.set_xlim(5, 1440)
-    ax2.set_xlabel("Storm Duration (minutes) [Logarithmic Scale: 5 min to 1440 min]", fontsize=10)
+    ax2.set_xlabel("Storm Duration (minutes)", fontsize=10)
     ax2.set_ylabel("Rainfall Intensity (mm/hr)", fontsize=10)
-    ax2.set_title("2. Semilogarithmic IDF Plot (Extended Duration Spectrum 5 min - 24 hrs) - Shire (Inda Selassie)", fontsize=11, fontweight='bold')
+    ax2.set_title("2. IDF Curve Plot (Semilogarithmic plot for extended duration spectrum 5 min - 24 hrs)-Shire", fontsize=11, fontweight='bold')
     ax2.grid(True, which="both", linestyle=":", alpha=0.6)
     ax2.legend(title="Return Period", loc="upper right")
     
@@ -185,7 +182,7 @@ with tab2:
 
 # --- DISPLAY 3: BOTH X,Y LOGARITHMIC PLOT ---
 with tab3:
-    st.subheader("3. Log-Log IDF Plot (Full Spectrum 5 min - 24 hrs) - Shire (Inda Selassie)")
+    st.subheader("3. IDF Curve Plot (Double-Logarithmic plot for full spectrum 5 min - 24 hrs)-Shire")
     
     fig3, ax3 = plt.subplots(figsize=(10, 5), dpi=150)
     
@@ -202,9 +199,9 @@ with tab3:
         )
     
     ax3.set_xlim(5, 1440)
-    ax3.set_xlabel("Storm Duration (minutes) [Logarithmic Scale]", fontsize=10)
-    ax3.set_ylabel("Rainfall Intensity (mm/hr) [Logarithmic Scale]", fontsize=10)
-    ax3.set_title("3. Double-Logarithmic (Log-Log) IDF Plot - Shire (Inda Selassie)", fontsize=11, fontweight='bold')
+    ax3.set_xlabel("Storm Duration (minutes)", fontsize=10)
+    ax3.set_ylabel("Rainfall Intensity (mm/hr)", fontsize=10)
+    ax3.set_title("3. IDF Curve Plot (Double-Logarithmic plot for full spectrum 5 min - 24 hrs)-Shire", fontsize=11, fontweight='bold')
     ax3.grid(True, which="both", linestyle=":", alpha=0.6)
     ax3.legend(title="Return Period", loc="upper right")
     
@@ -220,7 +217,7 @@ with tab4:
     col_a, col_b, col_c, col_d = st.columns(4)
     
     with col_a:
-        user_loc = st.selectbox("Selected Target Location", ["Shire (Inda Selassie)", "Axum", "Adwa", "Sheraro"], index=0)
+        user_loc = st.selectbox("Selected Target Location", ["Shire", "Axum", "Adwa", "Sheraro"], index=0)
         user_return = st.selectbox("Return Period (T, Years)", [2, 5, 10, 25, 50, 100], index=3)
         
     with col_b:
@@ -238,14 +235,12 @@ with tab4:
     if compute_btn or "storm_computed" in st.session_state:
         st.session_state["storm_computed"] = True
         
-        # Calculate design intensity (I) and depth (P)
         a_param = 450 * (user_return ** 0.22)
         calc_intensity = a_param / ((user_duration + 12.0) ** 0.78)
-        calc_depth = calc_intensity * (user_duration / 60.0)  # Total rainfall depth (mm)
+        calc_depth = calc_intensity * (user_duration / 60.0)
         
-        # SCS Hydrologic Abstraction (CN)
-        S = (25400 / cn_value) - 254  # Potential maximum retention (mm)
-        Ia = 0.2 * S  # Initial abstraction (mm)
+        S = (25400 / cn_value) - 254
+        Ia = 0.2 * S
         if calc_depth > Ia:
             P_eff = ((calc_depth - Ia) ** 2) / (calc_depth - Ia + S)
         else:
@@ -260,15 +255,12 @@ with tab4:
         m3.metric("Initial Abstraction (Ia)", f"{Ia:.2f} mm")
         m4.metric("Effective Depth (P_eff)", f"{P_eff:.2f} mm")
         
-        # Generate Synthetic Alternating Block Hyetograph
         n_blocks = int(user_duration / time_step)
         t_arr = np.arange(time_step, user_duration + time_step, time_step)
         
-        # Incremental depth via Sherman formula
         p_cum = [a_param / ((t + 12.0) ** 0.78) * (t / 60.0) for t in t_arr]
         p_inc = np.diff(np.insert(p_cum, 0, 0))
         
-        # Alternating block ordering (center peak)
         p_block = np.zeros(n_blocks)
         sorted_inc = np.sort(p_inc)[::-1]
         center = n_blocks // 2
@@ -283,7 +275,6 @@ with tab4:
                 p_block[right] = sorted_inc[i]
                 right += 1
                 
-        # Tabular View
         storm_df = pd.DataFrame({
             "Time (min)": t_arr,
             "Incremental Depth (mm)": np.round(p_block, 2),
@@ -309,38 +300,11 @@ with tab4:
             st.dataframe(storm_df, height=300, use_container_width=True)
 
 # ==========================================
-# 7. ORGANIZED EXCEL DATABASE GENERATOR
+# 7. REGIONAL DATA ACCESS NOTICE
 # ==========================================
 st.markdown("---")
-st.subheader("📁 Formal Database Export Engine")
-st.markdown("Export complete regional hydrological databases formatted for scientific publication and hydraulic software import.")
-
-if st.button("📥 Download Full Regional Analysis Database (.xlsx)"):
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        # Sheet 1: IDF Analysis Matrix
-        idf_df.to_excel(writer, sheet_name='IDF_Analysis')
-        
-        # Sheet 2: Coordinates & Station Metadata
-        meta_df = pd.DataFrame({
-            "Parameter": ["Location", "Zone", "Latitude (DMS)", "Longitude (DMS)", "UTM Easting (m)", "UTM Northing (m)", "UTM Zone"],
-            "Value": ["Shire (Inda Selassie)", "Northwestern Zone", lat_dms, lon_dms, utm_easting, utm_northing, "37N"]
-        })
-        meta_df.to_excel(writer, sheet_name='Station_Metadata', index=False)
-        
-        # Sheet 3: Return Period Depth Summary
-        freq_df = pd.DataFrame({
-            "Return Period (Years)": [2, 5, 10, 25, 50, 100],
-            "Gumbel 24-hr P (mm)": [34.23, 43.48, 49.61, 57.36, 63.10, 68.80],
-            "Log-Pearson III (mm)": [33.79, 42.75, 49.15, 57.10, 63.02, 68.85],
-            "GEV (mm)": [34.20, 44.69, 52.25, 61.80, 68.90, 75.90]
-        })
-        freq_df.to_excel(writer, sheet_name='Frequency_Analysis', index=False)
-
-    excel_data = output.getvalue()
-    st.download_button(
-        label="📄 Download Rainfall_Scientific_Analysis_Northwestern_and_Central_Zone.xlsx",
-        data=excel_data,
-        file_name="Rainfall_Scientific_Analysis_Northwestern_and_Central_Zone.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+st.subheader("📁 Regional Hydrological Database Access")
+st.info(
+    "Complete regional hydrological matrices, baseline frequency datasets, and exportable high-resolution spreadsheets "
+    "are available for academic research and professional engineering design upon formal email request."
+)
