@@ -106,7 +106,9 @@ def load_historical_data(town_name):
     doy = dates.dayofyear
     seasonal_intensity = np.exp(-0.5 * ((doy - 215) / 30) ** 2)
     daily_rain = np.random.exponential(scale=5.0, size=len(dates)) * seasonal_intensity
-    daily_rain[daily_rain < 0.5] = 0.0  # Zero out light trace rainfall
+    
+    # Zero out light trace rainfall on the NumPy array before constructing DataFrame
+    daily_rain = np.where(daily_rain < 0.5, 0.0, daily_rain)
     
     df = pd.DataFrame({
         "Date": dates,
@@ -167,7 +169,6 @@ st.caption("Visualization of the full 26-year daily record and multi-year mean p
 
 # Compute annual totals and monthly mean profile
 annual_totals = df_historical.groupby("Year")["Daily_Precipitation_mm"].sum()
-monthly_means = df_historical.groupby("Month", sort=False)["Daily_Precipitation_mm"].mean()
 
 # Render Matplotlib Figure
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 4.5))
@@ -203,7 +204,7 @@ with gate_col1:
 with gate_col2:
     st.write(" ") # Spacing offset
     st.write(" ")
-    # Simple passcode check (Can be linked to st.secrets["ADMIN_PASSCODE"] in production)
+    # Passcode check
     if access_code == "TigrayHydro2026":
         st.success("✅ Access Granted: Administrative Clearance Validated")
         
@@ -233,7 +234,7 @@ with gate_col2:
 st.markdown("---")
 
 # ==========================================
-# FEATURE 4: 5-DAY LIVE PRECIPITATION FORECAST
+# FEATURE 3: 5-DAY LIVE PRECIPITATION FORECAST
 # ==========================================
 st.subheader("🌦️ 3. Live 5-Day Rainfall Forecast (Open-Meteo Integration)")
 st.caption("Retrieves short-term regional weather predictions via Open-Meteo live API.")
