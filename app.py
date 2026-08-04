@@ -47,7 +47,7 @@ st.markdown("""
     <h1>TIGRAY REGIONAL DESIGN STORM & HYDROLOGIC ENGINE v2.0</h1>
     <p>Integrated IDF Modeling, Daily Data Processing, and Live 5-Day Precipitation Forecasting</p>
 </div>
-""", unsafe_unsafe_term=True if hasattr(st, "unsafe_unsafe_term") else False, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 # ==========================================
 # 2. EXTENDED WOREDA TOWNS & COORDINATES
